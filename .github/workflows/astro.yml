@@ -38,9 +38,10 @@ jobs:
           poetry install
 
       - name: Run Codegen
-          run: |
-            cd codegen
-            poetry run main.py
+        shell: pwsh
+        run: |
+          cd codegen
+          poetry run main.py
 
       - name: Detect package manager
         id: detect-package-manager
