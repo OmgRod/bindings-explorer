@@ -20,7 +20,19 @@ env:
   BUILD_PATH: "."
 
 jobs:
-  build:
+  generate:
+    strategy:
+      matrix:
+        config:
+          - { platform: Win32, version: "2.204" }
+          - { platform: MacOS, version: "2.200" }
+          - { platform: Win64, version: "2.206" }
+          - { platform: MacOS, version: "2.206" }
+          - { platform: iOS, version: "2.206" }
+          - { platform: Win64, version: "2.2074" }
+          - { platform: MacOS, version: "2.2074" }
+          - { platform: iOS, version: "2.2074" }
+
     name: Build
     runs-on: windows-latest
     steps:
@@ -29,17 +41,49 @@ jobs:
         with:
           submodules: true
 
-      - name: Setup Python
-        working-directory: codegen
-        run: |
-          pip install poetry
-          poetry install
-
       - name: Run Codegen
         shell: pwsh
         working-directory: codegen
-        # run: ./codegen.ps1
-        run: poetry run python main.py
+        run: cmake -B build -S . -DGEODE_TARGET_PLATFORM=${{ matrix.config.platform }} -DGEODE_GD_VERSION=${{ matrix.config.version }} -DBINDINGS_REPO=${{ matrix.config.repo }}
+
+      - name: Copy CodegenData.json files to src/data/versions
+        shell: pwsh
+        run: |
+          $scriptDir = "${{ github.workspace }}/codegen"
+          $bindingsDir = Join-Path $scriptDir "bindings/bindings"
+          $outputBaseDir = Join-Path "${{ github.workspace }}" "src/data/versions"
+
+          if (-not (Test-Path $bindingsDir)) {
+            Write-Error "Bindings directory not found: $bindingsDir"
+            exit 1
+          }
+
+          if (-not (Test-Path $outputBaseDir)) {
+            New-Item -ItemType Directory -Path $outputBaseDir -Force | Out-Null
+          }
+
+          Get-ChildItem -Path $bindingsDir -Directory | Where-Object { $_.Name.ToLower() -ne "include" } | ForEach-Object {
+            $folder = $_
+            $codegenDataPath = Join-Path $folder.FullName "Geode\CodegenData.json"
+            if (Test-Path $codegenDataPath) {
+              $destDir = Join-Path $outputBaseDir $folder.Name
+              if (-not (Test-Path $destDir)) {
+                New-Item -ItemType Directory -Path $destDir -Force | Out-Null
+              }
+              $destFile = Join-Path $destDir "codegen.json"
+
+              try {
+                Copy-Item -Path $codegenDataPath -Destination $destFile -Force
+                Write-Host "Copied CodegenData.json from $($folder.Name) to $destFile"
+              }
+              catch {
+                Write-Warning "Failed to copy CodegenData.json for $($folder.Name): $($_.Exception.Message)"
+              }
+            }
+            else {
+              Write-Warning "CodegenData.json not found in folder $($folder.Name)"
+            }
+          }
 
       - name: Detect package manager
         id: detect-package-manager
@@ -96,7 +140,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    needs: build
+    needs: generate
     runs-on: ubuntu-latest
     name: Deploy
     steps:
