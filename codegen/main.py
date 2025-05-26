@@ -60,6 +60,12 @@ def run_codegen_on_folders(exe_path):
     bindings_dir = os.path.abspath("./bindings/bindings")
     output_base_dir = os.path.abspath("../src/data/versions")
 
+    print(f"Bindings directory: {bindings_dir}")
+    print(f"Output base directory: {output_base_dir}")
+
+    # Ensure output base directory exists before processing
+    os.makedirs(output_base_dir, exist_ok=True)
+
     if not os.path.isdir(bindings_dir):
         print(f"Bindings directory not found: {bindings_dir}")
         sys.exit(1)
