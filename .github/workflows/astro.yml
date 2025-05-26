@@ -31,13 +31,13 @@ jobs:
           submodules: true
       - name: Install Dependencies
         run: |
-          'cd codegen'
-          'pip install poetry'
-          'poetry install'
+          cd codegen
+          pip install poetry
+          poetry install
       - name: Run Codegen Script
         run: |
-          'poetry run main.py'
-          'cd ../'
+          poetry run main.py
+          cd ../
       - name: Detect package manager
         id: detect-package-manager
         shell: bash
