@@ -5,7 +5,6 @@ on:
     - cron: '0 0 * * *'
   push:
     branches: ["master"]
-
   workflow_dispatch:
 
 permissions:
@@ -47,7 +46,6 @@ jobs:
           $executable = Join-Path $buildDir "Codegen.exe"
           $releaseExecutable = Join-Path $buildDir "Release\Codegen.exe"
 
-          # Function to run a command and exit on failure
           function Run-Command($cmd, $args) {
             Write-Host "Running: $cmd $args"
             $process = Start-Process -FilePath $cmd -ArgumentList $args -NoNewWindow -Wait -PassThru
@@ -57,25 +55,19 @@ jobs:
             }
           }
 
-          # Check if executable exists
           if (Test-Path $executable) {
             Write-Host "Found existing Codegen executable. Skipping build."
           } elseif (Test-Path $releaseExecutable) {
             Write-Host "Found existing Codegen Release executable. Skipping build."
             $executable = $releaseExecutable
           } else {
-            # Create build directory if not exists
             if (-not (Test-Path $buildDir)) {
               New-Item -ItemType Directory -Path $buildDir | Out-Null
             }
 
-            # Run cmake configure
             Run-Command "cmake" "-S $sourceDir -B $buildDir"
-            
-            # Run cmake build
             Run-Command "cmake" "--build $buildDir --config Release"
 
-            # Check executable again after build
             if (Test-Path $executable) {
               Write-Host "Build produced executable at $executable"
             } elseif (Test-Path $releaseExecutable) {
@@ -95,14 +87,12 @@ jobs:
             exit 1
           }
 
-          # Ensure output base directory exists
           if (-not (Test-Path $outputBaseDir)) {
             New-Item -ItemType Directory -Path $outputBaseDir | Out-Null
           }
 
           $successfulFolders = @()
 
-          # Loop through bindings folders
           Get-ChildItem -Path $bindingsDir -Directory | Sort-Object Name | ForEach-Object {
             $folder = $_
             if ($folder.Name -ieq "include") {
@@ -118,14 +108,6 @@ jobs:
 
             Write-Host "Running executable on folder: $($folder.Name)"
 
-            $args = @(
-              $executable,
-              "Win64",
-              $folder.FullName,
-              "./"
-            )
-
-            # Run codegen executable
             $proc = Start-Process -FilePath $executable -ArgumentList "Win64", $folder.FullName, "./" -NoNewWindow -Wait -PassThru
 
             if ($proc.ExitCode -ne 0) {
@@ -136,7 +118,6 @@ jobs:
             }
           }
 
-          # Copy CodegenData.json for each successful folder
           foreach ($version in $successfulFolders) {
             $srcFile = Join-Path $bindingsDir "$version\Geode\CodegenData.json"
             $destDir = Join-Path $outputBaseDir $version
@@ -156,7 +137,7 @@ jobs:
               Write-Host "Copied CodegenData.json for $version to $destFile"
             }
             catch {
-              Write-Warning "Failed to copy CodegenData.json for $version: $_"
+              Write-Warning "Failed to copy CodegenData.json for $version: ${_}"
             }
           }
 
@@ -203,7 +184,6 @@ jobs:
         shell: pwsh
         run: |
           $runner = '${{ steps.detect-package-manager.outputs.runner }}'
-          # Run build in one line to avoid line continuation issues
           Invoke-Expression "$runner astro build --site '${{ steps.pages.outputs.origin }}' --base '${{ steps.pages.outputs.base_path }}'"
         working-directory: ${{ env.BUILD_PATH }}
 
