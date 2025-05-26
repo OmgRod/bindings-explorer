@@ -32,16 +32,15 @@ jobs:
 
       - name: Install Python dependencies
         shell: pwsh
+        working-directory: codegen
         run: |
-          cd codegen
           pip install poetry
           poetry install
 
       - name: Run Codegen
         shell: pwsh
-        run: |
-          cd codegen
-          poetry run main.py
+        working-directory: codegen
+        run: poetry run main.py
 
       - name: Detect package manager
         id: detect-package-manager
