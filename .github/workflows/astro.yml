@@ -30,13 +30,17 @@ jobs:
         with:
           submodules: true
 
-      - name: Codegen with Python
+      - name: Install Python dependencies
         shell: pwsh
         run: |
           cd codegen
           pip install poetry
           poetry install
-          poetry run main.py
+
+      - name: Run Codegen
+          run: |
+            cd codegen
+            poetry run main.py
 
       - name: Detect package manager
         id: detect-package-manager
