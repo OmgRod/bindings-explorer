@@ -25,7 +25,7 @@ function generateSidebar(): SidebarGroup[] {
 
     const items: SidebarItem[] = data.classes.map((cls: any) => ({
       label: cls.name,
-      link: `/bindings/${version}/${cls.name}`
+      link: `/bindings/${version}/${encodeURIComponent(cls.name)}`
     }));
 
     return {
