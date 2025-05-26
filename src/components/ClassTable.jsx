@@ -1,13 +1,31 @@
+function isConvertibleToNumber(val) {
+  // Accepts only integers that aren't NaN or Infinity
+  const num = typeof val === 'string' ? Number(val.trim()) : val;
+  return Number.isInteger(num);
+}
+
 export function renderAddress(addr) {
   if (!addr) return '-';
-  if (addr === 'inline') return <span className="platform-address">inline</span>;
+
+  if (addr === 'inline' || addr === 'link') {
+    return <span className="platform-address">{addr}</span>;
+  }
+
+  let original = addr;
+  let display = addr;
+
+  if (isConvertibleToNumber(addr)) {
+    const num = Number(addr);
+    display = '0x' + num.toString(16);
+  }
+
   return (
     <>
-      <span className="platform-address">{addr}</span>{' '}
+      <span className="platform-address">{display}</span>{' '}
       <button
         className="copy-btn"
         onClick={() => {
-          navigator.clipboard.writeText(addr);
+          navigator.clipboard.writeText(original.toString());
           alert('Copied to clipboard');
         }}
       >

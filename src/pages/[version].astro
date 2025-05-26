@@ -1,0 +1,106 @@
+---
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import fs from 'fs';
+import path from 'path';
+
+const { params } = Astro;
+const version = params.version;
+
+const jsonPath = path.resolve(`src/data/versions/${version}/codegen.json`);
+if (!fs.existsSync(jsonPath)) {
+  throw new Error(`Version '${version}' not found`);
+}
+
+const raw = fs.readFileSync(jsonPath, 'utf-8');
+const data = JSON.parse(raw);
+
+const classes = data.classes.map(cls => cls.name).sort((a, b) => a.localeCompare(b));
+
+export async function getStaticPaths() {
+  const versionsDir = path.resolve('src/data/versions');
+  const versions = fs.readdirSync(versionsDir);
+
+  const paths = [];
+
+  for (const version of versions) {
+    const filePath = path.join(versionsDir, version, 'codegen.json');
+    if (!fs.existsSync(filePath)) continue;
+
+    const raw = fs.readFileSync(filePath, 'utf-8');
+    const data = JSON.parse(raw);
+
+    for (const cls of data.classes) {
+      paths.push({
+        params: {
+          version,
+          class: encodeURIComponent(cls.name) // still encode it for the path
+        }
+      });
+    }
+  }
+
+  return paths;
+}
+
+---
+
+// Optionally style better in a CSS file
+<style>
+  .class-search {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 500px;
+    margin: 2rem auto;
+  }
+
+  input[type="text"] {
+    padding: 0.5rem;
+    font-size: 1rem;
+    width: 100%;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.5rem;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  li a {
+    display: block;
+    padding: 0.5rem;
+    text-decoration: none;
+    border-bottom: 1px solid var(--sl-color-gray-6);
+    color: var(--sl-color-text);
+  }
+
+  li a:hover {
+    background-color: var(--sl-color-gray-3);
+  }
+</style>
+
+<StarlightPage frontmatter={{ title: `Select Class (${version})` }}>
+  <div class="class-search">
+    <input type="text" placeholder="Search for a class..." oninput="filterClasses(this.value)">
+    <ul id="class-list">
+      {classes.map(name => (
+        <li><a href={`/bindings-explorer/${version}/${encodeURIComponent(name)}`}>{name}</a></li>
+      ))}
+    </ul>
+  </div>
+
+  <script type="text/javascript">
+    function filterClasses(query) {
+      const list = document.getElementById('class-list');
+      const items = list.querySelectorAll('li');
+      const q = query.toLowerCase();
+
+      for (const item of items) {
+        const text = item.textContent.toLowerCase();
+        item.style.display = text.includes(q) ? '' : 'none';
+      }
+    }
+  </script>
+</StarlightPage>

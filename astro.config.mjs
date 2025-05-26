@@ -15,6 +15,6 @@ export default defineConfig({
   starlight: {
     search: {
       provider: 'none' // ✅ moved here too
-	}
-  }
+	  }
+  },
 });

@@ -23,7 +23,7 @@ function generateSidebar(): SidebarGroup[] {
 
     const items: SidebarItem[] = data.classes.map((cls: any) => ({
       label: cls.name,
-      link: `/bindings/${version}/${encodeURIComponent(cls.name)}`
+      link: `/${version}/${encodeURIComponent(cls.name)}`
     }));
 
     return {
@@ -37,5 +37,7 @@ export default defineConfig({
   title: "Geode Bindings Explorer",
   sidebar: generateSidebar(),
   tableOfContents: false,
-  customCss: ["./src/assets/customCSS.css"]
+  customCss: ["./src/assets/customCSS.css"],
+  pagination: false,
+  pagefind: false,
 });

@@ -1,12 +1,8 @@
 ---
 import fs from 'fs';
 import path from 'path';
-import ClassTable from '../../../components/ClassTable.jsx';
+import ClassTable from '../../components/ClassTable.jsx';
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
-
-function sanitizeName(name) {
-  return name.replace(/[:<>?"*|\\/]/g, '_');
-}
 
 export async function getStaticPaths() {
   const versionsDir = path.resolve('src/data/versions');
@@ -22,9 +18,11 @@ export async function getStaticPaths() {
     const data = JSON.parse(raw);
 
     for (const cls of data.classes) {
-      const encodedClassName = encodeURIComponent(cls.name);
       paths.push({
-        params: { version, class: encodedClassName }
+        params: {
+          version,
+          class: encodeURIComponent(cls.name) // still encode it for the path
+        }
       });
     }
   }
@@ -37,9 +35,6 @@ const version = params.version;
 const encodedClassName = params.class;
 
 const className = decodeURIComponent(encodedClassName);
-
-const sanitizedClassName = sanitizeName(className);
-
 const jsonPath = path.resolve(`src/data/versions/${version}/codegen.json`);
 
 if (!fs.existsSync(jsonPath)) {
@@ -49,8 +44,11 @@ if (!fs.existsSync(jsonPath)) {
 const raw = fs.readFileSync(jsonPath, 'utf-8');
 const data = JSON.parse(raw);
 
+// Instead of matching sanitized names, find the actual class by name
 const classData = data.classes.find(c => c.name === className);
+
 if (!classData) {
+  // You could optionally suggest closest match or show a custom 404 page
   throw new Error(`Class '${className}' not found in version '${version}'`);
 }
 ---

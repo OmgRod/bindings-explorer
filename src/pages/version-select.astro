@@ -1,0 +1,50 @@
+---
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+import fs from 'fs';
+import path from 'path';
+
+const versionsDir = path.resolve('src/data/versions');
+const versionFolders = fs.readdirSync(versionsDir).filter((folder) => {
+  const jsonPath = path.join(versionsDir, folder, 'codegen.json');
+  return fs.existsSync(jsonPath);
+});
+
+const versionData = versionFolders.reverse().map((version) => ({ version }));
+
+export async function getStaticPaths() {
+  const versionsDir = path.resolve('src/data/versions');
+  const versions = fs.readdirSync(versionsDir);
+
+  const paths = [];
+
+  for (const version of versions) {
+    const filePath = path.join(versionsDir, version, 'codegen.json');
+    if (!fs.existsSync(filePath)) continue;
+
+    const raw = fs.readFileSync(filePath, 'utf-8');
+    const data = JSON.parse(raw);
+
+    for (const cls of data.classes) {
+      paths.push({
+        params: {
+          version,
+          class: encodeURIComponent(cls.name) // still encode it for the path
+        }
+      });
+    }
+  }
+
+  return paths;
+}
+---
+
+<StarlightPage frontmatter={{ title: "Select Version" }}>
+    <CardGrid>
+        {versionData.map(({ version }) => (
+            <LinkCard title={version} href={`/bindings-explorer/${version}`}>
+            test this
+            </LinkCard>
+        ))}
+    </CardGrid>
+</StarlightPage>
