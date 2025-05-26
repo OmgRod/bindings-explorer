@@ -18,6 +18,10 @@ const classes = [...data.classes]
   .map(cls => cls.name)
   .sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }));
 
+function toSlug(name) {
+  return name.replace(/[^a-zA-Z0-9\-]/g, "_");
+}
+
 export async function getStaticPaths() {
   const versionsDir = path.resolve('src/data/versions');
   const versions = fs.readdirSync(versionsDir);
@@ -35,7 +39,7 @@ export async function getStaticPaths() {
       paths.push({
         params: {
           version,
-          class: encodeURIComponent(cls.name) // still encode it for the path
+          class: toSlug(cls.name)
         }
       });
     }
@@ -43,7 +47,6 @@ export async function getStaticPaths() {
 
   return paths;
 }
-
 ---
 
 // Optionally style better in a CSS file
@@ -88,7 +91,7 @@ export async function getStaticPaths() {
     <input type="text" placeholder="Search for a class..." oninput="filterClasses(this.value)">
     <ul id="class-list">
       {classes.map(name => (
-        <li><a href={`/bindings-explorer/${version}/${encodeURIComponent(name)}`}>{name}</a></li>
+        <li><a href={`/bindings-explorer/${version}/${toSlug(name)}`}>{name}</a></li>
       ))}
     </ul>
   </div>

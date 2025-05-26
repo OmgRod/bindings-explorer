@@ -12,6 +12,10 @@ const versionFolders = fs.readdirSync(versionsDir).filter((folder) => {
 
 const versionData = versionFolders.reverse().map((version) => ({ version }));
 
+function toSlug(name: string): string {
+  return name.replace(/[^a-zA-Z0-9\-]/g, "_");
+}
+
 export async function getStaticPaths() {
   const versionsDir = path.resolve('src/data/versions');
   const versions = fs.readdirSync(versionsDir);
@@ -29,7 +33,7 @@ export async function getStaticPaths() {
       paths.push({
         params: {
           version,
-          class: encodeURIComponent(cls.name) // still encode it for the path
+          class: toSlug(cls.name)
         }
       });
     }
@@ -40,11 +44,11 @@ export async function getStaticPaths() {
 ---
 
 <StarlightPage frontmatter={{ title: "Select Version" }}>
-    <CardGrid>
-        {versionData.map(({ version }) => (
-            <LinkCard title={version} href={`/bindings-explorer/${version}`}>
-            test this
-            </LinkCard>
-        ))}
-    </CardGrid>
+  <CardGrid>
+    {versionData.map(({ version }) => (
+      <LinkCard title={version} href={`/bindings-explorer/${version}`}>
+        test this
+      </LinkCard>
+    ))}
+  </CardGrid>
 </StarlightPage>

@@ -12,6 +12,10 @@ interface SidebarGroup {
   items: SidebarItem[];
 }
 
+function toSlug(name: string): string {
+  return name.replace(/[^a-zA-Z0-9\-]/g, "_");
+}
+
 function generateSidebar(): SidebarGroup[] {
   const versionsDir = path.resolve("./src/data/versions");
   let versions = fs.readdirSync(versionsDir);
@@ -28,7 +32,7 @@ function generateSidebar(): SidebarGroup[] {
       .sort((a: any, b: any) => a.name.localeCompare(b.name))
       .map((cls: any) => ({
         label: cls.name,
-        link: `/${version}/${encodeURIComponent(cls.name)}`
+        link: `/${version}/${toSlug(cls.name)}`
       }));
 
     return {
