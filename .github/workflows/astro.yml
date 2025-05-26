@@ -137,7 +137,7 @@ jobs:
               Write-Host "Copied CodegenData.json for $version to $destFile"
             }
             catch {
-              Write-Warning "Failed to copy CodegenData.json for $version: ${_}"
+              Write-Warning "Failed to copy CodegenData.json for $version: $($_)"
             }
           }
 
