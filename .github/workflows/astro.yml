@@ -31,7 +31,9 @@ jobs:
 
       - name: Run Codegen
         shell: pwsh
-        run: ./codegen/codegen.ps1
+        working-directory: codegen
+        # run: ./codegen.ps1
+        run: poetry run python main.py
 
       - name: Detect package manager
         id: detect-package-manager
