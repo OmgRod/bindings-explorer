@@ -30,10 +30,10 @@ jobs:
           submodules: true
 
       # --- Build Codegen if needed and run it on bindings folders ---
-      - name: Build and run Codegen, then copy CodegenData.json
+      - name: Build and run Codegen
         shell: pwsh
         run: |
-          $sourceDir = "$Env:GITHUB_WORKSPACE\bindings\codegen"
+          $sourceDir = "$Env:GITHUB_WORKSPACE\codegen\bindings\codegen"
           $buildDir = "$sourceDir\build"
           $exePaths = @(
             "$buildDir\Codegen.exe",
