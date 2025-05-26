@@ -2,6 +2,7 @@ import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 import fs from "fs";
 import path from "path";
+import { title } from "process";
 
 interface SidebarItem {
   label: string;
@@ -35,8 +36,8 @@ function generateSidebar(): SidebarGroup[] {
 }
 
 export default defineConfig({
-  integrations: [starlight({
     title: "Geode Bindings Explorer",
-    sidebar: generateSidebar()
-  })],
+    sidebar: generateSidebar(),
+    tableOfContents: false,
+    // theme: 'github-dark',
 });

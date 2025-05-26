@@ -1,0 +1,55 @@
+---
+import fs from 'fs';
+import path from 'path';
+import ClassTable from '../../../components/ClassTable.jsx';
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+
+export async function getStaticPaths() {
+  const versionsDir = path.resolve('src/data/versions');
+  const versions = fs.readdirSync(versionsDir);
+
+  const paths = [];
+
+  for (const version of versions) {
+    const filePath = path.join(versionsDir, version, 'codegen.json');
+    if (!fs.existsSync(filePath)) continue;
+
+    const raw = fs.readFileSync(filePath, 'utf-8');
+    const data = JSON.parse(raw);
+
+    for (const cls of data.classes) {
+      paths.push({
+        params: { version, class: cls.name }
+      });
+    }
+  }
+
+  return paths;
+}
+
+const { params } = Astro;
+const version = params.version;
+const className = params.class;
+
+const jsonPath = path.resolve(`src/data/versions/${version}/codegen.json`);
+
+if (!fs.existsSync(jsonPath)) {
+  throw new Error(`Version data not found for version '${version}'`);
+}
+
+const raw = fs.readFileSync(jsonPath, 'utf-8');
+const data = JSON.parse(raw);
+
+const classData = data.classes.find(c => c.name === className);
+if (!classData) {
+  throw new Error(`Class '${className}' not found in version '${version}'`);
+}
+---
+
+<StarlightPage frontmatter={{ title: `${className} (${version})` }}>
+  {classData.inherits?.length && (
+    <p class="inherits"><strong>Inherits:</strong> {classData.inherits.join(', ')}</p>
+  )}
+
+  <ClassTable classData={classData} />
+</StarlightPage>
