@@ -29,6 +29,11 @@ jobs:
         with:
           submodules: true
 
+      - name: Setup Python
+        run: |
+          pip install poetry
+          poetry install
+
       - name: Run Codegen
         shell: pwsh
         working-directory: codegen

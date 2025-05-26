@@ -24,3 +24,4 @@ codegen/bindings/bindings/*/Geode
 codegen/bindings
 src/data
 */build
+*/__pycache__
