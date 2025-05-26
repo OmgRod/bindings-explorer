@@ -78,7 +78,7 @@ jobs:
           }
 
           # Run Codegen exe on each valid folder inside bindings/bindings
-          $bindingsDir = "$Env:GITHUB_WORKSPACE\bindings\bindings"
+          $bindingsDir = "$Env:GITHUB_WORKSPACE\codegen\bindings\bindings"
           $outputBaseDir = "$Env:GITHUB_WORKSPACE\src\data\versions"
 
           if (-not (Test-Path $bindingsDir)) {
