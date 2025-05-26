@@ -40,4 +40,11 @@ export default defineConfig({
     sidebar: generateSidebar(),
     tableOfContents: false,
     // theme: 'github-dark',
+    customCss: [
+        './src/assets/customCSS.css'
+    ],
+    base: '/bindings-explorer',
+    search: {
+        provider: 'none'
+    },
 });
