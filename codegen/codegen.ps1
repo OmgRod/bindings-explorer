@@ -1,3 +1,6 @@
+# Get script directory to use as base for relative paths
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
+
 function Build-CodegenIfNeeded {
     param (
         [string]$BuildDir,
@@ -23,19 +26,44 @@ function Build-CodegenIfNeeded {
     }
 
     Write-Host "Configuring CMake..."
-    $configureProcess = Start-Process -FilePath "cmake" -ArgumentList "-S", $SourceDir, "-B", $BuildDir -NoNewWindow -Wait -PassThru -RedirectStandardOutput "./cmake_configure_out.txt" -RedirectStandardError "./cmake_configure_err.txt"
+    # Add timeout (e.g., 300 seconds = 5 minutes) to prevent hanging forever
+    $configureProcess = Start-Process -FilePath "cmake" `
+        -ArgumentList "-S", $SourceDir, "-B", $BuildDir `
+        -NoNewWindow -Wait -PassThru `
+        -RedirectStandardOutput "./cmake_configure_out.txt" `
+        -RedirectStandardError "./cmake_configure_err.txt"
+
+    if ($configureProcess -eq $null) {
+        Write-Error "Failed to start cmake configure process."
+        exit 1
+    }
+
     if ($configureProcess.ExitCode -ne 0) {
-        Write-Host "CMake configuration failed:"
+        Write-Host "CMake configuration failed (ExitCode: $($configureProcess.ExitCode)):"
+        Write-Host "--- Standard Output ---"
         Get-Content "./cmake_configure_out.txt" | ForEach-Object { Write-Host $_ }
+        Write-Host "--- Standard Error ---"
         Get-Content "./cmake_configure_err.txt" | ForEach-Object { Write-Host $_ }
         exit $configureProcess.ExitCode
     }
 
     Write-Host "Building project..."
-    $buildProcess = Start-Process -FilePath "cmake" -ArgumentList "--build", $BuildDir, "--config", "Release" -NoNewWindow -Wait -PassThru -RedirectStandardOutput "./cmake_build_out.txt" -RedirectStandardError "./cmake_build_err.txt"
+    $buildProcess = Start-Process -FilePath "cmake" `
+        -ArgumentList "--build", $BuildDir, "--config", "Release" `
+        -NoNewWindow -Wait -PassThru `
+        -RedirectStandardOutput "./cmake_build_out.txt" `
+        -RedirectStandardError "./cmake_build_err.txt"
+
+    if ($buildProcess -eq $null) {
+        Write-Error "Failed to start cmake build process."
+        exit 1
+    }
+
     if ($buildProcess.ExitCode -ne 0) {
-        Write-Host "Build failed:"
+        Write-Host "Build failed (ExitCode: $($buildProcess.ExitCode)):"
+        Write-Host "--- Standard Output ---"
         Get-Content "./cmake_build_out.txt" | ForEach-Object { Write-Host $_ }
+        Write-Host "--- Standard Error ---"
         Get-Content "./cmake_build_err.txt" | ForEach-Object { Write-Host $_ }
         exit $buildProcess.ExitCode
     }
@@ -47,7 +75,7 @@ function Build-CodegenIfNeeded {
         return $releaseExecutable
     }
     else {
-        Write-Host "Executable not found in expected locations after build:"
+        Write-Error "Executable not found in expected locations after build:"
         Write-Host "  $executable"
         Write-Host "  $releaseExecutable"
         exit 1
@@ -59,16 +87,17 @@ function Run-CodegenOnFolders {
         [string]$ExePath
     )
 
-    $bindingsDir = Resolve-Path "codegen/bindings/bindings" -ErrorAction SilentlyContinue
-    $outputBaseDir = Resolve-Path "./src/data/versions" -ErrorAction SilentlyContinue
+    $bindingsDir = Resolve-Path (Join-Path $scriptDir "bindings/bindings") -ErrorAction SilentlyContinue
+    $outputBaseDir = Resolve-Path (Join-Path $scriptDir "../src/data/versions") -ErrorAction SilentlyContinue
 
     if (-not $bindingsDir) {
-        Write-Error "Bindings directory not found: codegen/bindings/bindings"
+        Write-Error "Bindings directory not found: bindings"
         exit 1
     }
+
     if (-not $outputBaseDir) {
-        New-Item -ItemType Directory -Path "./src/data/versions" -Force | Out-Null
-        $outputBaseDir = Resolve-Path "./src/data/versions"
+        New-Item -ItemType Directory -Path (Join-Path $scriptDir "src/data/versions") -Force | Out-Null
+        $outputBaseDir = Resolve-Path (Join-Path $scriptDir "src/data/versions")
     }
 
     Write-Host "Bindings directory: $bindingsDir"
@@ -110,7 +139,9 @@ function Run-CodegenOnFolders {
         $destFile = Join-Path $destDir "codegen.json"
 
         # Always create the destination directory
-        New-Item -ItemType Directory -Path $destDir -Force | Out-Null
+        if (-not (Test-Path $destDir)) {
+            New-Item -ItemType Directory -Path $destDir -Force | Out-Null
+        }
 
         if (-not (Test-Path $srcFile)) {
             Write-Warning "CodegenData.json not found for $version at expected path: $srcFile"
@@ -127,16 +158,15 @@ function Run-CodegenOnFolders {
     }
 }
 
-
-
 # Main script execution
-$sourceDir = (Resolve-Path "./codegen/bindings/codegen" -ErrorAction Stop).Path
-$buildDirObj = Resolve-Path "./codegen/build" -ErrorAction SilentlyContinue
+
+$sourceDir = Resolve-Path (Join-Path $scriptDir "bindings/codegen") -ErrorAction Stop
+$buildDirObj = Resolve-Path (Join-Path $scriptDir "build") -ErrorAction SilentlyContinue
 $buildDir = if ($buildDirObj) { $buildDirObj.Path } else { $null }
 
 if (-not $buildDir) {
-    New-Item -ItemType Directory -Path "./codegen/build" -Force | Out-Null
-    $buildDir = (Resolve-Path "./codegen/build" -ErrorAction Stop).Path
+    New-Item -ItemType Directory -Path (Join-Path $scriptDir "build") -Force | Out-Null
+    $buildDir = Resolve-Path (Join-Path $scriptDir "build") -ErrorAction Stop
 }
 
 $exePath = Build-CodegenIfNeeded -BuildDir $buildDir -SourceDir $sourceDir
