@@ -30,6 +30,7 @@ jobs:
           submodules: true
 
       - name: Setup Python
+        working-directory: codegen
         run: |
           pip install poetry
           poetry install
