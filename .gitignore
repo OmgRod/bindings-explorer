@@ -22,3 +22,4 @@ pnpm-debug.log*
 
 codegen/bindings/bindings/*/Geode
 codegen/bindings
+src/data

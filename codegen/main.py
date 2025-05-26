@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+import shutil
 
 def build_codegen_if_needed(build_dir, source_dir):
     executable = os.path.join(build_dir, "Codegen.exe")
@@ -57,10 +58,13 @@ def build_codegen_if_needed(build_dir, source_dir):
 
 def run_codegen_on_folders(exe_path):
     bindings_dir = os.path.abspath("./bindings/bindings")
+    output_base_dir = os.path.abspath("../src/data/versions")
 
     if not os.path.isdir(bindings_dir):
         print(f"Bindings directory not found: {bindings_dir}")
         sys.exit(1)
+
+    successful_folders = []
 
     for folder_name in sorted(os.listdir(bindings_dir)):
         folder_path = os.path.join(bindings_dir, folder_name)
@@ -95,6 +99,24 @@ def run_codegen_on_folders(exe_path):
             print(f"Codegen error in folder {folder_name} with return code {result.returncode}")
         else:
             print(f"Completed folder: {folder_name}")
+            successful_folders.append(folder_name)
+
+    # After processing all folders, copy CodegenData.json for each successful folder
+    for version in successful_folders:
+        src_file = os.path.join(bindings_dir, version, "Geode", "CodegenData.json")
+        dest_dir = os.path.join(output_base_dir, version)
+        dest_file = os.path.join(dest_dir, "codegen.json")
+
+        if not os.path.isfile(src_file):
+            print(f"Warning: CodegenData.json not found for {version} at expected path: {src_file}")
+            continue
+
+        os.makedirs(dest_dir, exist_ok=True)
+        try:
+            shutil.copy2(src_file, dest_file)
+            print(f"Copied CodegenData.json for {version} to {dest_file}")
+        except Exception as e:
+            print(f"Failed to copy CodegenData.json for {version}: {e}")
 
 def main():
     source_dir = os.path.abspath("./bindings/codegen")
