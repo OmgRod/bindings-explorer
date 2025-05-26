@@ -40,6 +40,7 @@ jobs:
           'cd ../'
       - name: Detect package manager
         id: detect-package-manager
+        shell: bash
         run: |
           if [ -f "${{ github.workspace }}/yarn.lock" ]; then
             echo "manager=yarn" >> $GITHUB_OUTPUT
