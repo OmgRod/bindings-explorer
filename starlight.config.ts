@@ -14,17 +14,22 @@ interface SidebarGroup {
 
 function generateSidebar(): SidebarGroup[] {
   const versionsDir = path.resolve("./src/data/versions");
-  const versions = fs.readdirSync(versionsDir);
+  let versions = fs.readdirSync(versionsDir);
+
+  versions = versions.sort().reverse();
 
   return versions.map((version) => {
     const jsonPath = path.join(versionsDir, version, "codegen.json");
     const raw = fs.readFileSync(jsonPath, "utf-8");
     const data = JSON.parse(raw);
 
-    const items: SidebarItem[] = data.classes.map((cls: any) => ({
-      label: cls.name,
-      link: `/${version}/${encodeURIComponent(cls.name)}`
-    }));
+    const items: SidebarItem[] = data.classes
+      .slice()
+      .sort((a: any, b: any) => a.name.localeCompare(b.name))
+      .map((cls: any) => ({
+        label: cls.name,
+        link: `/${version}/${encodeURIComponent(cls.name)}`
+      }));
 
     return {
       label: `Version ${version}`,
@@ -40,4 +45,9 @@ export default defineConfig({
   customCss: ["./src/assets/customCSS.css"],
   pagination: false,
   pagefind: false,
+  logo: {
+    light: './src/assets/logo-nav-light.png',
+    dark: './src/assets/logo-nav-dark.png',
+    replacesTitle: true,
+  }
 });
