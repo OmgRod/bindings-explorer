@@ -29,15 +29,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: true
-      - name: Install Dependencies
+      - name: Codegen with Python
         run: |
           cd codegen
           pip install poetry
           poetry install
-      - name: Run Codegen Script
-        run: |
           poetry run main.py
-          cd ../
       - name: Detect package manager
         id: detect-package-manager
         shell: bash
