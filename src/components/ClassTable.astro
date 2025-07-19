@@ -88,6 +88,8 @@ function toHex(addr) {
   href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css"
 />
 
+<h2>Functions</h2>
+
 <table>
   <thead>
     <tr>
@@ -140,46 +142,67 @@ function toHex(addr) {
         })}
       </tr>
     ))}
+</table>
 
+<h2>Fields</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Data Type</th>
+    </tr>
+  </thead>
+  <tbody>
     {classData.fields?.map(field => (
       <tr key={field.name}>
-        <td>{field.name}</td>
-        <td class="type-info">Field</td>
-        <td></td>
-        {['win', 'imac', 'm1', 'ios', 'android32', 'android64'].map(platform => {
-          const hex = toHex(field.bindings?.[platform]);
-          return (
-            <td>
-              {hex !== '-' ? (
-                <>
-                  <span class="platform-address">{hex}</span>
-                  <button
-                    type="button"
-                    class="copy-btn"
-                    data-copy={hex}
-                    aria-label="Copy address"
-                    title="Copy address"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      viewBox="0 0 24 24"
-                    >
-                      <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5" />
-                      <rect x="3" y="3" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.5" />
-                    </svg>
-                  </button>
-                </>
-              ) : '-'}
-            </td>
-          );
-        })}
+        <td>
+          <span class="platform-address">{field.name}</span>
+          <button
+            type="button"
+            class="copy-btn"
+            data-copy={field.name}
+            aria-label="Copy name"
+            title="Copy name"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              viewBox="0 0 24 24"
+            >
+              <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5" />
+              <rect x="3" y="3" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.5" />
+            </svg>
+          </button>
+        </td>
+        <td>
+          <span class="platform-address">{field.type}</span>
+          <button
+            type="button"
+            class="copy-btn"
+            data-copy={field.type}
+            aria-label="Copy type"
+            title="Copy type"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              viewBox="0 0 24 24"
+            >
+              <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5" />
+              <rect x="3" y="3" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.5" />
+            </svg>
+          </button>
+        </td>
       </tr>
     ))}
   </tbody>
 </table>
+
 
 <!-- <link
   rel="stylesheet"

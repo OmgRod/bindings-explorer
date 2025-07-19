@@ -6,6 +6,10 @@ function toSlug(name) {
   return name.replace(/[^a-zA-Z0-9\-]/g, "_");
 }
 
+export async function getStaticPaths() {
+  return [{ params: {} }];
+}
+
 const versionsDir = path.resolve('src/data/versions');
 const versions = fs.readdirSync(versionsDir).sort();
 const latestVersion = versions[versions.length - 1];
@@ -13,43 +17,26 @@ const latestVersion = versions[versions.length - 1];
 const filePath = path.join(versionsDir, latestVersion, 'codegen.json');
 const raw = fs.readFileSync(filePath, 'utf-8');
 const data = JSON.parse(raw);
-const classSlugs = data.classes.map(c => ({
-  name: c.name,
-  slug: toSlug(c.name),
-}));
+const classes = data.classes;
 
-const version = latestVersion;
+function getRandomClassSlug() {
+  const idx = Math.floor(Math.random() * classes.length);
+  return toSlug(classes[idx].name);
+}
+
+const randomClassSlug = getRandomClassSlug();
+const redirectUrl = `/bindings-explorer/${latestVersion}/${randomClassSlug}`;
 ---
 
-<html lang="en">
+<html>
   <head>
-    <meta charset="UTF-8" />
-    <title>Redirecting...</title>
-    <script is:inline>
-      const classSlugs = JSON.parse(`{{ JSON.stringify(classSlugs) }}`);
-      const version = "{{ version }}";
-
-      const idx = Math.floor(Math.random() * classSlugs.length);
-      const selected = classSlugs[idx];
-      const redirectUrl = `/bindings-explorer/${version}/${selected.slug}`;
-
-      // Show link in fallback
-      document.addEventListener("DOMContentLoaded", () => {
-        const a = document.getElementById("random-link");
-        if (a) {
-          a.href = redirectUrl;
-          a.textContent = `Go to ${selected.name}`;
-        }
-      });
-
-      // Do redirect
-      window.location.href = redirectUrl;
+    <meta http-equiv="refresh" content={`0; url=${redirectUrl}`} />
+    <script>
+      window.location.replace({redirectUrl});
     </script>
   </head>
   <body>
     <p>Redirecting to a random class...</p>
-    <p>
-      If you are not redirected, <a id="random-link" href="#">click here</a>.
-    </p>
+    <a href={redirectUrl}>Click here if you are not redirected.</a>
   </body>
 </html>
