@@ -108,7 +108,7 @@ function toHex(addr) {
         <td>{fn.name}</td>
         <td class="type-info">Function</td>
         <td>{fn.args?.map(arg => arg.name || arg).join(', ')}</td>
-        {['win', 'mac', 'm1', 'ios', 'android32', 'android64'].map(platform => {
+        {['win', 'imac', 'm1', 'ios', 'android32', 'android64'].map(platform => {
           const hex = toHex(fn.bindings?.[platform]);
           return (
             <td>
@@ -146,7 +146,7 @@ function toHex(addr) {
         <td>{field.name}</td>
         <td class="type-info">Field</td>
         <td></td>
-        {['win', 'mac', 'm1', 'ios', 'android32', 'android64'].map(platform => {
+        {['win', 'imac', 'm1', 'ios', 'android32', 'android64'].map(platform => {
           const hex = toHex(field.bindings?.[platform]);
           return (
             <td>
