@@ -1,0 +1,79 @@
+---
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import { CardGrid } from "@astrojs/starlight/components";
+import fs from "fs";
+import path from "path";
+
+const versionsDir = path.resolve("src/data/versions");
+const versionFolders = fs.readdirSync(versionsDir).filter((folder) => {
+  const jsonPath = path.join(versionsDir, folder, "codegen.json");
+  return fs.existsSync(jsonPath);
+});
+
+const stats = {
+  win: { total: 0, address: 0, inline: 0, link: 0 },
+  imac: { total: 0, address: 0, inline: 0, link: 0 },
+  m1: { total: 0, address: 0, inline: 0, link: 0 },
+  ios: { total: 0, address: 0, inline: 0, link: 0 },
+  android32: { total: 0, address: 0, inline: 0, link: 0 },
+  android64: { total: 0, address: 0, inline: 0, link: 0 }
+};
+
+for (const version of versionFolders) {
+  const jsonPath = path.join(versionsDir, version, "codegen.json");
+  const raw = fs.readFileSync(jsonPath, "utf-8");
+  const data = JSON.parse(raw);
+
+  for (const cls of data.classes) {
+    for (const fn of cls.functions || []) {
+      for (const platform in stats) {
+        stats[platform].total++;
+        const val = fn.bindings?.[platform];
+        if (val === "inline") stats[platform].inline++;
+        else if (val === "link") stats[platform].link++;
+        else if (val !== undefined && val !== null && val !== "") stats[platform].address++;
+      }
+    }
+  }
+}
+---
+
+<StarlightPage frontmatter={{ title: "Binding Stats", template: "splash" }}>
+  <h2>Binding Statistics</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Platform</th>
+        <th>Total</th>
+        <th>Address</th>
+        <th>Inline</th>
+        <th>Link</th>
+        <th>Undone</th>
+        <th>% Address</th>
+        <th>% Inline</th>
+        <th>% Link</th>
+        <th>% Undone</th>
+      </tr>
+    </thead>
+    <tbody>
+      {Object.entries(stats).map(([platform, data]) => {
+        const undone = data.total - data.address - data.inline - data.link;
+        const pct = (n) => data.total ? ((n / data.total) * 100).toFixed(1) + '%' : '0%';
+        return (
+          <tr>
+            <td>{platform}</td>
+            <td>{data.total}</td>
+            <td>{data.address}</td>
+            <td>{data.inline}</td>
+            <td>{data.link}</td>
+            <td>{undone}</td>
+            <td>{pct(data.address)}</td>
+            <td>{pct(data.inline)}</td>
+            <td>{pct(data.link)}</td>
+            <td>{pct(undone)}</td>
+          </tr>
+        );
+      })}
+    </tbody>
+  </table>
+</StarlightPage>
