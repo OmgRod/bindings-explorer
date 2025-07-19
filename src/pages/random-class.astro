@@ -3,37 +3,48 @@ import fs from 'fs';
 import path from 'path';
 
 export async function getStaticPaths() {
-    // Only one static path: the page itself
-    return [{ params: {} }];
+  return [{ params: {} }];
 }
 
 const versionsDir = path.resolve('src/data/versions');
-const versions = fs.readdirSync(versionsDir).sort();
-const latestVersion = versions[versions.length - 1];
 
-const filePath = path.join(versionsDir, latestVersion, 'codegen.json');
-const raw = fs.readFileSync(filePath, 'utf-8');
-const data = JSON.parse(raw);
-const classes = data.classes;
+let latestVersion = '';
+let classes = [];
 
-function getRandomClass() {
-    const idx = Math.floor(Math.random() * classes.length);
-    return classes[idx].name;
+if (fs.existsSync(versionsDir)) {
+  const versions = fs.readdirSync(versionsDir).sort();
+  latestVersion = versions[versions.length - 1];
+
+  const filePath = path.join(versionsDir, latestVersion, 'codegen.json');
+
+  if (fs.existsSync(filePath)) {
+    const raw = fs.readFileSync(filePath, 'utf-8');
+    const data = JSON.parse(raw);
+    classes = data.classes || [];
+  }
 }
 
-const randomClass = encodeURIComponent(getRandomClass());
-const redirectUrl = `/bindings-explorer/${latestVersion}/${randomClass}`;
+function getRandomClass() {
+  if (!classes.length) return null;
+  const idx = Math.floor(Math.random() * classes.length);
+  return classes[idx].name;
+}
+
+const randomName = getRandomClass();
+const redirectUrl = randomName ? `/bindings-explorer/${latestVersion}/${encodeURIComponent(randomName)}` : '/404';
 ---
 
-<html>
-    <head>
-        <meta http-equiv="refresh" content={`0; url=${redirectUrl}`} />
-        <script>
-            window.location.replace({redirectUrl});
-        </script>
-    </head>
-    <body>
-        <p>Redirecting to a random class...</p>
-        <a href={redirectUrl}>Click here if you are not redirected.</a>
-    </body>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content={`0; url=${redirectUrl}`} />
+    <title>Redirecting...</title>
+    <script>
+      window.location.replace({JSON.stringify(redirectUrl)});
+    </script>
+  </head>
+  <body>
+    <p>Redirecting to a random class...</p>
+    <a href={redirectUrl}>Click here if you are not redirected.</a>
+  </body>
 </html>
