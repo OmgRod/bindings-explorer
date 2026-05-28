@@ -29,105 +29,17 @@ jobs:
         with:
           submodules: true
 
-      # --- Build Codegen if needed and run it on bindings folders ---
-      - name: Build and run Codegen
-        shell: pwsh
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run Codegen Script
+        shell: cmd
         run: |
-          $sourceDir = "$Env:GITHUB_WORKSPACE\codegen\bindings\codegen"
-          $buildDir = "$sourceDir\build"
-          $exePaths = @(
-            "$buildDir\Codegen.exe",
-            "$buildDir\Release\Codegen.exe"
-          )
+          cd codegen
+          python main.py
 
-          # Find existing executable or build it
-          $exe = $exePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
-          if (-not $exe) {
-            Write-Host "Codegen executable not found. Building..."
-
-            # Create build directory
-            if (-not (Test-Path $buildDir)) { New-Item -ItemType Directory -Path $buildDir | Out-Null }
-
-            # Configure CMake
-            $cmakeConfigCmd = "cmake -S `"$sourceDir`" -B `"$buildDir`""
-            Write-Host "Configuring CMake..."
-            $configResult = Invoke-Expression $cmakeConfigCmd
-            if ($LASTEXITCODE -ne 0) {
-              Write-Error "CMake configuration failed."
-              exit $LASTEXITCODE
-            }
-
-            # Build Codegen in Release mode
-            $cmakeBuildCmd = "cmake --build `"$buildDir`" --config Release"
-            Write-Host "Building project..."
-            $buildResult = Invoke-Expression $cmakeBuildCmd
-            if ($LASTEXITCODE -ne 0) {
-              Write-Error "Build failed."
-              exit $LASTEXITCODE
-            }
-
-            # Try to find exe again
-            $exe = $exePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
-            if (-not $exe) {
-              Write-Error "Codegen executable not found after build."
-              exit 1
-            }
-          }
-          else {
-            Write-Host "Found existing Codegen executable at $exe"
-          }
-
-          # Run Codegen exe on each valid folder inside bindings/bindings
-          $bindingsDir = "$Env:GITHUB_WORKSPACE\codegen\bindings\bindings"
-          $outputBaseDir = "$Env:GITHUB_WORKSPACE\src\data\versions"
-
-          if (-not (Test-Path $bindingsDir)) {
-            Write-Error "Bindings directory not found: $bindingsDir"
-            exit 1
-          }
-
-          if (-not (Test-Path $outputBaseDir)) {
-            New-Item -ItemType Directory -Path $outputBaseDir | Out-Null
-          }
-
-          $successfulFolders = @()
-
-          Get-ChildItem -Path $bindingsDir -Directory | Where-Object { $_.Name.ToLower() -ne "include" } | ForEach-Object {
-            $folder = $_
-            $entryBro = Join-Path $folder.FullName "Entry.bro"
-            if (-not (Test-Path $entryBro)) {
-              Write-Warning "Skipping $($folder.Name): Entry.bro not found"
-              return
-            }
-            Write-Host "Running Codegen on folder: $($folder.Name)"
-            # Run exe: args are: platform (Win64), folder path, output dir ("./")
-            & $exe "Win64" $folder.FullName "./"
-            if ($LASTEXITCODE -eq 0) {
-              Write-Host "Completed folder: $($folder.Name)"
-              $successfulFolders += $folder.Name
-            }
-            else {
-              Write-Warning "Codegen failed on folder $($folder.Name) with exit code $LASTEXITCODE"
-            }
-          }
-
-          # Copy CodegenData.json for each successful folder
-          foreach ($version in $successfulFolders) {
-            $srcFile = Join-Path $bindingsDir $version "Geode\CodegenData.json"
-            if (-not (Test-Path $srcFile)) {
-              Write-Warning "CodegenData.json not found for $version at $srcFile"
-              continue
-            }
-            $destDir = Join-Path $outputBaseDir $version
-            if (-not (Test-Path $destDir)) {
-              New-Item -ItemType Directory -Path $destDir | Out-Null
-            }
-            $destFile = Join-Path $destDir "codegen.json"
-            Copy-Item $srcFile $destFile -Force
-            Write-Host "Copied CodegenData.json for $version to $destFile"
-          }
-
-      # --- Detect package manager, setup Node, build Astro site ---
       - name: Detect package manager
         id: detect-package-manager
         shell: pwsh
