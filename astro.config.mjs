@@ -6,7 +6,7 @@ import react from "@astrojs/react";
 
 export default defineConfig({
   site: 'https://omgrod.me',
-  base: '/bindings-explorer', // ✅ moved here
+  base: '/bindings-explorer',
   integrations: [
     starlight(starlightConfig),
     mdx(),
@@ -14,7 +14,7 @@ export default defineConfig({
   ],
   starlight: {
     search: {
-      provider: 'none' // ✅ moved here too
+      provider: 'none'
 	  }
   },
 });
